@@ -3,7 +3,6 @@
   themes: claude --default;
 }
 
-/* @import './node_modules/flyonui/variants.css'; */
 @import 'flyonui/variants.css';
 @plugin "@iconify/tailwind4";
 @source "./node_modules/flyonui/dist/index.js";

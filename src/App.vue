@@ -3,11 +3,6 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <!-- <div>
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/campaign">Campaign</RouterLink>
-    <RouterLink to="/device">Device</RouterLink>
-  </div> -->
   <div>
     <button
       type="button"

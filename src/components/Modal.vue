@@ -122,4 +122,14 @@
       </div>
     </div>
   </div>
+  <button
+    type="button"
+    class="btn btn-success"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    aria-controls="basic-modal"
+    data-overlay="#basic-modal"
+  >
+    Create New
+  </button>
 </template>

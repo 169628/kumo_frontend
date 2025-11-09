@@ -1,12 +1,12 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import Toast from '@/components/Toast.vue'
 </script>
 
 <template>
   <div class="w-full min-h-screen flex">
     <aside
       id="logo-sidebar"
-      class="overlay [--auto-close:md] md:shadow-none overlay-open:translate-x-0 drawer drawer-start hidden max-w-64 md:flex md:translate-x-0 border-r-1 border-oklch-200 md:relative md:h-screen"
+      class="overlay [--auto-close:md] md:shadow-none overlay-open:translate-x-0 drawer drawer-start hidden max-w-64 md:flex md:translate-x-0 border-r border-oklch-200 md:relative md:h-screen"
       role="dialog"
       tabindex="-1"
     >
@@ -50,10 +50,10 @@ import { RouterLink, RouterView } from 'vue-router'
         </ul>
       </div>
     </aside>
-    <div class="flex-1 w-full pt-6 px-6 lg:px-8 relative">
+    <div class="flex-1 w-full pt-6 md:pt-8 px-6 lg:px-8 relative">
       <RouterView />
     </div>
-    <div class="fixed bottom-0 left-0 w-full border-t-1 border-oklch-200 md:hidden">
+    <div class="fixed bottom-0 left-0 w-full border-t border-oklch-200 md:hidden">
       <button
         type="button"
         class="btn btn-text max-md:btn-square md:hidden"

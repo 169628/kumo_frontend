@@ -3,84 +3,71 @@
 </script>
 
 <template>
-  <div class="accordion accordion-shadow">
-    <div class="accordion-item" id="avatar1-arrow-right">
-      <div
-        class="accordion-toggle inline-flex items-center justify-between text-start cursor-default"
-      >
-        <div class="w-full flex">
-          <div class="flex-1">
-            <p class="mb-0.5">ID</p>
-            <p class="text-sm text-base-content/50 font-normal">123456</p>
-          </div>
-          <div class="flex-1">
-            <p class="mb-0.5">Brand</p>
-            <p class="text-sm text-base-content/50 font-normal">B phone</p>
-          </div>
-          <div class="flex-1">
-            <p class="mb-0.5">Model</p>
-            <p class="text-sm text-base-content/50 font-normal">B 17</p>
-          </div>
-          <div class="hidden lg:flex sm:w-2/3">
-            <div class="flex-1">
-              <p class="mb-0.5">SV</p>
-              <p class="text-sm text-base-content/50 font-normal">V1.1</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">TV</p>
-              <p class="text-sm text-base-content/50 font-normal">V2.0</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">Size</p>
-              <p class="text-sm text-base-content/50 font-normal">100 MB</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">Update at</p>
-              <p class="text-sm text-base-content/50 font-normal">2025-11-2</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">action</p>
-              <p class="text-sm text-base-content/50 font-normal">XXX</p>
-            </div>
-          </div>
-        </div>
-        <span
-          class="icon-[tabler--chevron-left] lg:hidden accordion-item-active:-rotate-90 size-5 shrink-0 transition-transform duration-300 rtl:-rotate-180"
-          aria-controls="avatar1-arrow-right-collapse"
-          aria-expanded="true"
-        ></span>
-      </div>
-      <div class="lg:hidden">
-        <div
-          id="avatar1-arrow-right-collapse"
-          class="accordion-content w-full overflow-hidden transition-[height] duration-300 hidden"
-          aria-labelledby="avatar1-arrow-right"
-          role="region"
-        >
-          <div class="w-full py-4 px-5 flex">
-            <div class="flex-1">
-              <p class="mb-0.5">SV</p>
-              <p class="text-sm text-base-content/50 font-normal">V1.1</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">TV</p>
-              <p class="text-sm text-base-content/50 font-normal">V2.0</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">Size</p>
-              <p class="text-sm text-base-content/50 font-normal">100 MB</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">Update at</p>
-              <p class="text-sm text-base-content/50 font-normal">2025-11-2</p>
-            </div>
-            <div class="flex-1">
-              <p class="mb-0.5">action</p>
-              <p class="text-sm text-base-content/50 font-normal">XXX</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="w-full overflow-x-auto">
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="xl:hidden"></th>
+          <th>ENABLED</th>
+          <th>NO.</th>
+          <th>BRAND</th>
+          <th>MODEL</th>
+          <th class="hidden md:table-cell">SV</th>
+          <th class="hidden lg:table-cell">TV</th>
+          <th class="hidden lg:table-cell">SIZE</th>
+          <th class="hidden xl:table-cell">UPDATE AT</th>
+          <th class="hidden xl:table-cell">ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-hover">
+          <td class="xl:hidden">
+            <span class="icon-[tabler--chevron-right] size-5"></span>
+            <!-- <span class="icon-[tabler--chevron-down] size-5"></span> -->
+          </td>
+          <td>
+            <input type="checkbox" class="switch switch-success" id="switchSuccess1" checked />
+          </td>
+          <td>9999</td>
+          <td>B phone</td>
+          <td>B 17</td>
+          <td class="hidden md:table-cell">V1.1</td>
+          <td class="hidden lg:table-cell">v2.0</td>
+          <td class="hidden lg:table-cell">100 MB</td>
+          <td class="hidden xl:table-cell">2025-11-02 11:30:00</td>
+          <td class="hidden xl:table-cell">
+            <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+              <span class="icon-[tabler--pencil] size-5"></span>
+            </button>
+            <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+              <span class="icon-[tabler--trash] size-5"></span>
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" class="xl:hidden">
+            <ul>
+              <li class="md:hidden"><span class="font-medium tracking-wider">SV:</span> V1.1</li>
+              <li class="lg:hidden"><span class="font-medium tracking-wider">TV:</span> V2.0</li>
+              <li class="lg:hidden">
+                <span class="font-medium tracking-wider">SIZE:</span> 100 MB
+              </li>
+              <li class="xl:hidden">
+                <span class="font-medium tracking-wider">UPDATE AT:</span> 2025-11-02 11:30:00
+              </li>
+              <li class="xl:hidden">
+                <span class="font-medium tracking-wider">ACTIONS:</span>
+                <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+                  <span class="icon-[tabler--pencil] size-5"></span>
+                </button>
+                <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+                  <span class="icon-[tabler--trash] size-5"></span>
+                </button>
+              </li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>

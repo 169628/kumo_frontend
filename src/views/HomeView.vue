@@ -3,5 +3,7 @@
 </script>
 
 <template>
-  <h1 class="text-center">HomeView</h1>
+  <div class="flex justify-between mb-5 px-5">
+    <h1 class="text-2xl">Dashbord</h1>
+  </div>
 </template>

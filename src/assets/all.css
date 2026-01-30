@@ -16,3 +16,7 @@
   name: claude;
   font-family: 'Geist';
 }
+
+.kumo-focus :focus {
+  outline: green;
+}

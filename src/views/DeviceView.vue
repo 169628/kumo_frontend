@@ -152,6 +152,20 @@ const deviceList = [
   <div class="flex justify-between mb-6 px-5">
     <h1 class="text-2xl">Device</h1>
   </div>
+  <div class="pl-5 mb-6">
+    <div
+      class="input input-lg flex max-w-sm space-x-4 focus-within:outline focus-within:outline-2 focus-within:outline-success focus-within:outline-offset-0 focus-within:ring-0 focus-within:border-transparent"
+    >
+      <span class="icon-[tabler--search] text-base-content/80 my-auto size-6 shrink-0"></span>
+      <input
+        type="search"
+        class="grow focus:outline-none focus:ring-0"
+        placeholder="Search"
+        id="kbdInput"
+      />
+      <label class="sr-only" for="kbdInput">Search</label>
+    </div>
+  </div>
   <Table :columns="columns" :rows="deviceList">
     <template #arrow>
       <td class="xl:hidden">

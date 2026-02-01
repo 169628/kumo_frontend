@@ -1,7 +1,14 @@
 <script setup>
+import { onMounted, ref } from 'vue'
+import axios from 'axios'
+
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
 import Modal from '@/components/Modal.vue'
+
+const campaignList = ref([])
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const columns = [
   {
@@ -10,7 +17,7 @@ const columns = [
     title: '',
   },
   {
-    key: 'enable',
+    key: 'isEnabled',
     class: '',
     title: 'ENABLED',
   },
@@ -40,17 +47,17 @@ const columns = [
     title: 'TV',
   },
   {
-    key: 'file_size',
+    key: 'fileSize',
     class: 'hidden lg:table-cell',
     title: 'SIZE',
   },
   {
-    key: 'create_at',
+    key: 'createAt',
     class: 'hidden xl:table-cell',
     title: 'CREATE AT',
   },
   {
-    key: 'update_at',
+    key: 'updateAt',
     class: 'hidden xl:table-cell',
     title: 'UPDATE AT',
   },
@@ -60,59 +67,20 @@ const columns = [
     title: 'ACTIONS',
   },
 ]
-const campaignList = [
-  {
-    brand: 'Projector',
-    model: 'L1',
-    sv: 'v1.0.2',
-    tv: 'v1.2.4',
-    file: 'http://localhost:8080/kumo-servlet/example',
-    file_size: '3983209',
-    test_list: [],
-    download_by_id: 1,
-  },
-  {
-    brand: 'Projector',
-    model: 'L2',
-    sv: 'v1.1.0',
-    tv: 'v1.3.0',
-    file: 'http://localhost:8080/kumo-servlet/example',
-    file_size: '5128430',
-    is_test_mode: 1,
-    test_list: ['QA-01', 'QA-02'],
-    download_by_id: 2,
-  },
-  {
-    brand: 'Projector',
-    model: 'Pro L1',
-    sv: 'v2.0.0',
-    tv: 'v2.1.1',
-    file: 'http://localhost:8080/kumo-servlet/example',
-    file_size: '7421983',
-    test_list: [],
-    download_by_id: 1,
-  },
-  {
-    brand: 'Monitor',
-    model: 'Max',
-    sv: 'v2.0.5',
-    tv: 'v2.2.0',
-    file: 'http://localhost:8080/kumo-servlet/example',
-    file_size: '6893321',
-    is_test_mode: 1,
-    test_list: ['BETA-01'],
-    download_by_id: 1,
-  },
-  {
-    brand: 'Robot Vacuum',
-    model: 'Pro L1',
-    sv: 'v1.2.0',
-    tv: 'v1.4.1',
-    file: 'http://localhost:8080/kumo-servlet/example',
-    file_size: '8349200',
-    download_by_id: 2,
-  },
-]
+const renderCampaignList = async () => {
+  try {
+    const result = await axios.get(`${BASE_URL}/campaign`)
+    console.log(result.data)
+    // TODO if the message is failed
+    campaignList.value = result.data
+  } catch (error) {
+    console.log(error)
+    // TODO toast failed
+  }
+}
+onMounted(() => {
+  renderCampaignList()
+})
 </script>
 
 <template>
@@ -120,10 +88,17 @@ const campaignList = [
     <h1 class="text-2xl">Campaign</h1>
     <Modal />
   </div>
-  <div class="pl-5">
-    <div class="input input-lg flex max-w-sm space-x-4">
+  <div class="pl-5 mb-6">
+    <div
+      class="input input-lg flex max-w-sm space-x-4 focus-within:outline focus-within:outline-2 focus-within:outline-success focus-within:outline-offset-0 focus-within:ring-0 focus-within:border-transparent"
+    >
       <span class="icon-[tabler--search] text-base-content/80 my-auto size-6 shrink-0"></span>
-      <input type="search" class="grow" placeholder="Search" id="kbdInput" />
+      <input
+        type="search"
+        class="grow focus:outline-none focus:ring-0"
+        placeholder="Search"
+        id="kbdInput"
+      />
       <label class="sr-only" for="kbdInput">Search</label>
     </div>
   </div>
@@ -134,9 +109,14 @@ const campaignList = [
         <span class="icon-[tabler--chevron-down] size-5"></span>
       </td>
     </template>
-    <template #enable>
+    <template #isEnabled="{ value }">
       <td>
-        <input type="checkbox" class="switch switch-success" id="switchSuccess1" checked />
+        <input
+          type="checkbox"
+          class="switch switch-success"
+          id="switchSuccess1"
+          :checked="value == 'true'"
+        />
       </td>
     </template>
     <template #sv="{ value }">
@@ -174,13 +154,13 @@ const campaignList = [
             <span class="font-medium tracking-wider">TV:</span> {{ row.tv }}
           </li>
           <li class="lg:hidden">
-            <span class="font-medium tracking-wider">SIZE:</span> {{ row.file_size }}
+            <span class="font-medium tracking-wider">SIZE:</span> {{ row.fileSize }}
           </li>
           <li class="xl:hidden">
-            <span class="font-medium tracking-wider">CREATE AT:</span> {{ row.create_at }}
+            <span class="font-medium tracking-wider">CREATE AT:</span> {{ row.createAt }}
           </li>
           <li class="xl:hidden">
-            <span class="font-medium tracking-wider">UPDATE AT:</span> {{ row.update_at }}
+            <span class="font-medium tracking-wider">UPDATE AT:</span> {{ row.updateAt }}
           </li>
           <li class="xl:hidden">
             <span class="font-medium tracking-wider">ACTIONS:</span>

@@ -1,19 +1,22 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import axios from 'axios'
 
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
 import Modal from '@/components/Modal.vue'
 
-const campaignList = ref([])
+const allCampaignList = ref([])
+const keyword = ref('')
+const pageSize = 10
+const currentPage = ref(1)
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const columns = [
   {
     key: 'arrow',
-    class: 'xl:hidden',
+    class: '2xl:hidden',
     title: '',
   },
   {
@@ -58,26 +61,61 @@ const columns = [
   },
   {
     key: 'updateAt',
-    class: 'hidden xl:table-cell',
+    class: 'hidden 2xl:table-cell',
     title: 'UPDATE AT',
   },
   {
     key: 'actions',
-    class: 'hidden xl:table-cell',
+    class: 'hidden 2xl:table-cell',
     title: 'ACTIONS',
   },
 ]
+// get all data from backend
 const renderCampaignList = async () => {
   try {
     const result = await axios.get(`${BASE_URL}/campaign`)
     console.log(result.data)
     // TODO if the message is failed
-    campaignList.value = result.data
+    allCampaignList.value = result.data
   } catch (error) {
     console.log(error)
     // TODO toast failed
   }
 }
+// the keyword list
+const campaignList = computed(() => {
+  const k = keyword.value.toLowerCase()
+
+  if (!k) return allCampaignList.value
+
+  return allCampaignList.value.filter((item) => {
+    return (
+      item.no.toString().includes(k) ||
+      item.brand?.toLowerCase().includes(k) ||
+      item.model?.toLowerCase().includes(k)
+    )
+  })
+})
+// for the pagination
+const totalPage = computed(() => {
+  return Math.ceil(campaignList.value.length / pageSize)
+})
+// only show 'pageSize' data to this page
+const pagedCampaignList = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  const end = start + pageSize
+
+  return campaignList.value.slice(start, end)
+})
+// page from Pagination
+const chagePage = (n) => {
+  if (!n) return
+  currentPage.value = n
+}
+// if keyword changed back to page 1
+watch(keyword, () => {
+  currentPage.value = 1
+})
 onMounted(() => {
   renderCampaignList()
 })
@@ -96,15 +134,16 @@ onMounted(() => {
       <input
         type="search"
         class="grow focus:outline-none focus:ring-0"
-        placeholder="Search"
+        placeholder="Search By No. or Brand or Model"
         id="kbdInput"
+        v-model="keyword"
       />
       <label class="sr-only" for="kbdInput">Search</label>
     </div>
   </div>
-  <Table :columns="columns" :rows="campaignList">
+  <Table :columns="columns" :rows="pagedCampaignList">
     <template #arrow>
-      <td class="xl:hidden">
+      <td class="2xl:hidden">
         <span class="icon-[tabler--chevron-right] size-5"></span>
         <span class="icon-[tabler--chevron-down] size-5"></span>
       </td>
@@ -125,17 +164,17 @@ onMounted(() => {
     <template #tv="{ value }">
       <td class="hidden lg:table-cell">{{ value }}</td>
     </template>
-    <template #file_size="{ value }">
+    <template #fileSize="{ value }">
       <td class="hidden lg:table-cell">{{ value }}</td>
     </template>
-    <template #create_at="{ value }">
+    <template #createAt="{ value }">
       <td class="hidden xl:table-cell">{{ value }}</td>
     </template>
-    <template #update_at="{ value }">
-      <td class="hidden xl:table-cell">{{ value }}</td>
+    <template #updateAt="{ value }">
+      <td class="hidden 2xl:table-cell">{{ value }}</td>
     </template>
     <template #actions>
-      <td class="hidden xl:table-cell">
+      <td class="hidden 2xl:table-cell">
         <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
           <span class="icon-[tabler--pencil] size-5"></span>
         </button>
@@ -145,7 +184,7 @@ onMounted(() => {
       </td>
     </template>
     <template #hiddenArea="{ row }">
-      <td colspan="4" class="xl:hidden">
+      <td colspan="4" class="2xl:hidden">
         <ul>
           <li class="md:hidden">
             <span class="font-medium tracking-wider">SV:</span> {{ row.sv }}
@@ -159,10 +198,10 @@ onMounted(() => {
           <li class="xl:hidden">
             <span class="font-medium tracking-wider">CREATE AT:</span> {{ row.createAt }}
           </li>
-          <li class="xl:hidden">
+          <li class="2xl:hidden">
             <span class="font-medium tracking-wider">UPDATE AT:</span> {{ row.updateAt }}
           </li>
-          <li class="xl:hidden">
+          <li class="2xl:hidden">
             <span class="font-medium tracking-wider">ACTIONS:</span>
             <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
               <span class="icon-[tabler--pencil] size-5"></span>
@@ -175,5 +214,5 @@ onMounted(() => {
       </td>
     </template>
   </Table>
-  <Pagination />
+  <Pagination :page="totalPage" :current="currentPage" @emit-changePage="chagePage" />
 </template>

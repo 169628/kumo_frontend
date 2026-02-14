@@ -8,11 +8,13 @@ import Modal from '@/components/Modal.vue'
 
 const allCampaignList = ref([])
 const keyword = ref('')
-const pageSize = 10
+const pageSize = 5
 const currentPage = ref(1)
+const dropdown = ref(null)
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+// for table format
 const columns = [
   {
     key: 'arrow',
@@ -70,6 +72,14 @@ const columns = [
     title: 'ACTIONS',
   },
 ]
+// toggle dropdown
+const toggleDropdown = (no) => {
+  if (dropdown.value == no) {
+    dropdown.value = null
+  } else {
+    dropdown.value = no
+  }
+}
 // get all data from backend
 const renderCampaignList = async () => {
   try {
@@ -142,10 +152,13 @@ onMounted(() => {
     </div>
   </div>
   <Table :columns="columns" :rows="pagedCampaignList">
-    <template #arrow>
+    <template #arrow="{ row }">
       <td class="2xl:hidden">
-        <span class="icon-[tabler--chevron-right] size-5"></span>
-        <span class="icon-[tabler--chevron-down] size-5"></span>
+        <span
+          class="icon-[tabler--chevron-right] size-5"
+          :class="dropdown == row.no && 'rotate-90'"
+          @click="toggleDropdown(row.no)"
+        ></span>
       </td>
     </template>
     <template #isEnabled="{ value }">
@@ -185,32 +198,37 @@ onMounted(() => {
     </template>
     <template #hiddenArea="{ row }">
       <td colspan="4" class="2xl:hidden">
-        <ul>
-          <li class="md:hidden">
-            <span class="font-medium tracking-wider">SV:</span> {{ row.sv }}
-          </li>
-          <li class="lg:hidden">
-            <span class="font-medium tracking-wider">TV:</span> {{ row.tv }}
-          </li>
-          <li class="lg:hidden">
-            <span class="font-medium tracking-wider">SIZE:</span> {{ row.fileSize }}
-          </li>
-          <li class="xl:hidden">
-            <span class="font-medium tracking-wider">CREATE AT:</span> {{ row.createAt }}
-          </li>
-          <li class="2xl:hidden">
-            <span class="font-medium tracking-wider">UPDATE AT:</span> {{ row.updateAt }}
-          </li>
-          <li class="2xl:hidden">
-            <span class="font-medium tracking-wider">ACTIONS:</span>
-            <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
-              <span class="icon-[tabler--pencil] size-5"></span>
-            </button>
-            <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
-              <span class="icon-[tabler--trash] size-5"></span>
-            </button>
-          </li>
-        </ul>
+        <Transition
+          enter-active-class="transition-all duration-200 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+        >
+          <ul v-if="dropdown == row.no">
+            <li class="md:hidden">
+              <span class="font-medium tracking-wider">SV:</span> {{ row.sv }}
+            </li>
+            <li class="lg:hidden">
+              <span class="font-medium tracking-wider">TV:</span> {{ row.tv }}
+            </li>
+            <li class="lg:hidden">
+              <span class="font-medium tracking-wider">SIZE:</span> {{ row.fileSize }}
+            </li>
+            <li class="xl:hidden">
+              <span class="font-medium tracking-wider">CREATE AT:</span> {{ row.createAt }}
+            </li>
+            <li class="2xl:hidden">
+              <span class="font-medium tracking-wider">UPDATE AT:</span> {{ row.updateAt }}
+            </li>
+            <li class="2xl:hidden">
+              <span class="font-medium tracking-wider">ACTIONS:</span>
+              <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+                <span class="icon-[tabler--pencil] size-5"></span>
+              </button>
+              <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+                <span class="icon-[tabler--trash] size-5"></span>
+              </button>
+            </li></ul
+        ></Transition>
       </td>
     </template>
   </Table>

@@ -20,13 +20,13 @@ const props = defineProps({
         <template v-for="r in props.rows" :key="r.campaign_id">
           <tr class="row-hover">
             <template v-for="c in props.columns" :key="c.key">
-              <slot :name="`${c.key}`" :value="`${r[c.key]}`">
+              <slot :name="`${c.key}`" :value="`${r[c.key]}`" :row="r">
                 <td>{{ r[c.key] }}</td>
               </slot>
             </template>
           </tr>
           <tr>
-            <slot name="hiddenArea" :row="r"> No Data </slot>
+            <slot name="hiddenArea" :row="r"></slot>
           </tr>
         </template>
       </tbody>

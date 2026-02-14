@@ -30,19 +30,23 @@ import Toast from '@/components/Toast.vue'
       <div class="drawer-body flex flex-col px-2">
         <ul class="menu p-0">
           <li>
-            <RouterLink to="/">
+            <RouterLink
+              to="/"
+              active-class="font-bold bg-neutral/10"
+              exact-active-class="font-bold bg-neutral/10"
+            >
               <span class="icon-[tabler--chart-bar-popular] size-5"></span>
               Dashbord
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/campaign">
+            <RouterLink to="/campaign" active-class="font-bold bg-neutral/10">
               <span class="icon-[tabler--subtask] size-5"></span>
               Campaigns
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/device">
+            <RouterLink to="/device" active-class="font-bold bg-neutral/10">
               <span class="icon-[tabler--report-search] size-5"></span>
               Devices
             </RouterLink>

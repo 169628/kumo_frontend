@@ -1,20 +1,25 @@
 <script setup>
 import { onMounted, ref, computed, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useModalStore } from '@/stores/modalStore'
 import axios from 'axios'
 
+import CampaignModal from '@/components/CampaignModal.vue'
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
-import Modal from '@/components/Modal.vue'
 
+// for campaign list
 const allCampaignList = ref([])
 const keyword = ref('')
 const pageSize = 5
 const currentPage = ref(1)
 const dropdown = ref(null)
+// for create & edit modal
+const modalValue = ref(false)
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-// for table format
+// for campaign table format
 const columns = [
   {
     key: 'arrow',
@@ -72,7 +77,7 @@ const columns = [
     title: 'ACTIONS',
   },
 ]
-// toggle dropdown
+// RWD toggle dropdown
 const toggleDropdown = (no) => {
   if (dropdown.value == no) {
     dropdown.value = null
@@ -83,8 +88,7 @@ const toggleDropdown = (no) => {
 // get all data from backend
 const renderCampaignList = async () => {
   try {
-    const result = await axios.get(`${BASE_URL}/campaign`)
-    console.log(result.data)
+    const result = await axios.get(`${BASE_URL}/campaign/getAll`)
     // TODO if the message is failed
     allCampaignList.value = result.data
   } catch (error) {
@@ -126,15 +130,21 @@ const chagePage = (n) => {
 watch(keyword, () => {
   currentPage.value = 1
 })
+
+const closeModal = (status) => {
+  modalValue.value = status
+}
+
 onMounted(() => {
   renderCampaignList()
 })
 </script>
 
 <template>
+  <CampaignModal :show="modalValue" @emit-close="closeModal" />
   <div class="flex justify-between mb-6 px-5">
     <h1 class="text-2xl">Campaign</h1>
-    <Modal />
+    <button type="button" class="btn btn-success" @click="modalValue = true">Create New</button>
   </div>
   <div class="pl-5 mb-6">
     <div

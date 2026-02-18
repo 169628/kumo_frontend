@@ -1,0 +1,206 @@
+<script setup>
+import { ref } from 'vue'
+import { Form, useForm, Field, ErrorMessage } from 'vee-validate'
+import { schema } from '@/validations/campaignSchema'
+import axios from 'axios'
+
+const props = defineProps({
+  show: Boolean,
+})
+const testList = ref([''])
+const newCampaign = ref({
+  isTestMode: true,
+  downloadBy: 'wifi',
+})
+// vee-validate
+const { handleSubmit } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    isTestMode: true,
+  },
+})
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+// for close modal
+const emit = defineEmits(['emit-close'])
+const close = () => {
+  emit('emit-close', false)
+}
+
+// for modal test device part
+const addTestList = () => {
+  if (testList.value.length < 3) {
+    testList.value.push('')
+  }
+}
+const removeTestList = (index) => {
+  if (testList.value.length > 1) {
+    testList.value.splice(index, 1)
+  }
+}
+
+// for createCampaign
+const createCampaign = handleSubmit(async (values) => {
+  try {
+    const { file } = values
+    const payload = {
+      ...values,
+      ...newCampaign.value,
+      testList: JSON.stringify(testList.value),
+    }
+    payload.file = file.name
+    payload.fileSize = file.size
+    console.log(payload)
+    const result = await axios.post(`${BASE_URL}/campaign/create`, payload, {
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    })
+    // TODO if the message is failed
+  } catch (error) {
+    console.log(error)
+    // TODO toast failed
+  }
+})
+</script>
+
+<template>
+  <transition name="fade">
+    <div v-if="show" class="fixed inset-0 z-90 flex py-12 justify-center">
+      <div class="absolute inset-0 bg-black/50" @click="close"></div>
+
+      <!-- Modal -->
+      <div
+        class="relative bg-base-100 w-full max-w-lg rounded-xl shadow-xl z-10 max-h-[90vh] flex flex-col"
+      >
+        <!-- Header -->
+        <div class="flex justify-between items-center p-6 border-b">
+          <h3 class="text-2xl font-semibold">
+            <slot name="title">Create Campaign</slot>
+          </h3>
+
+          <button class="text-gray-400 hover:text-gray-700" @click="close">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto pt-8 pb-7 px-12">
+          <div class="select-floating w-full mb-6">
+            <Field class="select" name="brand" as="select">
+              <option value="">Please select</option>
+              <option value="Projector">Projector</option>
+              <option value="Monitor">Monitor</option>
+              <option value="Robot Vacuum">Robot Vacuum</option>
+            </Field>
+            <label class="select-floating-label">BRAND</label>
+            <ErrorMessage class="helper-text text-error" name="brand" />
+          </div>
+          <div class="select-floating w-full mb-6">
+            <Field class="select" name="model" as="select">
+              <option value="">Please select</option>
+              <option value="L1">L1</option>
+              <option value="Pro L1">Pro L1</option>
+              <option value="Max">Max</option>
+            </Field>
+            <label class="select-floating-label" for="selectStateErrorFloating">MODEL</label>
+            <ErrorMessage class="helper-text text-error" name="model" />
+          </div>
+          <div class="input-floating w-full mb-6">
+            <Field type="text" placeholder="v0.0.1" class="input rounded-2xl" name="sv" />
+            <label class="input-floating-label" for="pillFloatingInput">SV</label>
+            <ErrorMessage class="helper-text text-error" name="sv" />
+          </div>
+          <div class="input-floating w-full mb-6">
+            <Field type="text" placeholder="v1.1.1" class="input rounded-2xl" name="tv" />
+            <label class="input-floating-label" for="pillFloatingInput">TV</label>
+            <ErrorMessage class="helper-text text-error" name="tv" />
+          </div>
+
+          <div class="w-full mb-6">
+            <label class="label-text">Upload File</label>
+            <Field name="file" v-slot="{ handleChange }">
+              <input type="file" class="input" accept="image/*" @change="handleChange" />
+            </Field>
+            <ErrorMessage class="helper-text text-error" name="file" />
+          </div>
+          <div class="flex items-center gap-1 mb-4">
+            <input type="checkbox" class="switch switch-info" v-model="newCampaign.isTestMode" />
+            <label class="label-text text-base">TEST MODE</label>
+          </div>
+          <div class="mb-6">
+            <p class="mb-4">
+              Test Devices SN:
+              <span class="text-base-content font-medium">(Maximum 3)</span>
+            </p>
+            <div class="w-full space-y-3">
+              <div v-for="(device, index) in testList" :key="index" class="flex items-center gap-2">
+                <input
+                  type="text"
+                  class="input"
+                  placeholder="Enter Device SN"
+                  v-model="testList[index]"
+                />
+                <button
+                  class="btn btn-square btn-outline btn-info"
+                  @click="removeTestList(index)"
+                  :disabled="testList.length == 1"
+                >
+                  <span class="icon-[tabler--x]"></span>
+                </button>
+              </div>
+            </div>
+            <div class="flex w-full justify-end gap-2 mt-4">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary rounded-2xl"
+                @click="addTestList"
+                :disabled="testList.length >= 3"
+              >
+                <span class="icon-[tabler--plus]"></span>
+                ADD DEVICE
+              </button>
+            </div>
+          </div>
+          <div class="flex">
+            <label class="label-text text-base">Download By: </label>
+            <div class="join drop-shadow">
+              <input
+                class="join-item btn btn-soft"
+                type="radio"
+                aria-label="Wifi"
+                value="wifi"
+                v-model="newCampaign.downloadBy"
+              />
+              <input
+                class="join-item btn btn-soft"
+                type="radio"
+                aria-label="User"
+                value="user"
+                v-model="newCampaign.downloadBy"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-6 border-t flex justify-end gap-3">
+          <slot name="footer">
+            <button type="button" class="btn btn-soft" @click="close">Cancel</button>
+            <button type="submit" class="btn btn-primary" @click="createCampaign">Create</button>
+          </slot>
+        </div>
+      </div>
+    </div>
+  </transition>
+</template>
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

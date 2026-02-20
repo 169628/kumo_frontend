@@ -1,11 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Form, useForm, Field, ErrorMessage } from 'vee-validate'
 import { schema } from '@/validations/campaignSchema'
 import axios from 'axios'
 
 const props = defineProps({
   show: Boolean,
+  mode: String,
+  editNo: Number,
 })
 const testList = ref([''])
 const newCampaign = ref({
@@ -13,11 +15,8 @@ const newCampaign = ref({
   downloadBy: 'wifi',
 })
 // vee-validate
-const { handleSubmit } = useForm({
+const { handleSubmit, setValues, resetForm } = useForm({
   validationSchema: schema,
-  initialValues: {
-    isTestMode: true,
-  },
 })
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -28,6 +27,9 @@ const close = () => {
   emit('emit-close', false)
 }
 
+const refresh = () => {
+  emit('emit-refresh', true)
+}
 // for modal test device part
 const addTestList = () => {
   if (testList.value.length < 3) {
@@ -57,12 +59,53 @@ const createCampaign = handleSubmit(async (values) => {
         'Content-Type': 'application/json; charset=UTF-8',
       },
     })
+    if (result.data?.success) {
+      testList.value = ['']
+      newCampaign.value = {
+        isTestMode: true,
+        downloadBy: 'wifi',
+      }
+      refresh()
+      close()
+    }
     // TODO if the message is failed
   } catch (error) {
     console.log(error)
     // TODO toast failed
   }
 })
+
+watch(
+  () => props.show,
+  async (visible) => {
+    if (visible && props.mode === 'Edit' && props.editNo) {
+      try {
+        const result = await axios.get(`${BASE_URL}/campaign/getOne?no=${props.editNo}`)
+        if (!result.data?.success) {
+          // TODO send failed toast
+          close()
+        }
+        const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode, testList } =
+          result.data?.campaign
+        setValues({
+          brand,
+          model,
+          sv,
+          tv,
+          file,
+        })
+        testList.value = testList ? JSON.parse(testList) : ['']
+        newCampaign.value = {
+          ...newCampaign.value,
+          isTestMode,
+          downloadBy,
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  },
+)
 </script>
 
 <template>
@@ -77,7 +120,7 @@ const createCampaign = handleSubmit(async (values) => {
         <!-- Header -->
         <div class="flex justify-between items-center p-6 border-b">
           <h3 class="text-2xl font-semibold">
-            <slot name="title">Create Campaign</slot>
+            <slot name="title">{{ mode }} {{ editNo }} Campaign</slot>
           </h3>
 
           <button class="text-gray-400 hover:text-gray-700" @click="close">✕</button>
@@ -186,7 +229,15 @@ const createCampaign = handleSubmit(async (values) => {
         <div class="p-6 border-t flex justify-end gap-3">
           <slot name="footer">
             <button type="button" class="btn btn-soft" @click="close">Cancel</button>
-            <button type="submit" class="btn btn-primary" @click="createCampaign">Create</button>
+            <button
+              type="submit"
+              v-if="mode == 'Create'"
+              class="btn btn-primary"
+              @click="createCampaign"
+            >
+              Create
+            </button>
+            <button type="submit" v-else class="btn btn-primary">Save</button>
           </slot>
         </div>
       </div>

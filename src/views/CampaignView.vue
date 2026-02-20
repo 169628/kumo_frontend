@@ -16,6 +16,8 @@ const currentPage = ref(1)
 const dropdown = ref(null)
 // for create & edit modal
 const modalValue = ref(false)
+const modalMode = ref('Create')
+const editNo = ref(0)
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -90,10 +92,10 @@ const renderCampaignList = async () => {
   try {
     const result = await axios.get(`${BASE_URL}/campaign/getAll`)
     // TODO if the message is failed
-    allCampaignList.value = result.data
+    allCampaignList.value = result.data?.campaign
   } catch (error) {
     console.log(error)
-    // TODO toast failed
+    // TODO failed toast
   }
 }
 // the keyword list
@@ -131,8 +133,23 @@ watch(keyword, () => {
   currentPage.value = 1
 })
 
+const createModal = () => {
+  modalMode.value = 'Create'
+  editNo.value = 0
+  modalValue.value = true
+}
 const closeModal = (status) => {
   modalValue.value = status
+}
+
+const refresh = (status) => {
+  if (status) renderCampaignList()
+}
+
+const editModal = (campainNo) => {
+  modalMode.value = 'Edit'
+  editNo.value = campainNo
+  modalValue.value = true
 }
 
 onMounted(() => {
@@ -141,11 +158,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <CampaignModal :show="modalValue" @emit-close="closeModal" />
+  <CampaignModal
+    :show="modalValue"
+    :mode="modalMode"
+    :editNo="editNo"
+    @emit-close="closeModal"
+    @emit-refresh="refresh"
+  />
   <div class="flex justify-between mb-6 px-5">
     <h1 class="text-2xl">Campaign</h1>
-    <button type="button" class="btn btn-success" @click="modalValue = true">Create New</button>
+    <!-- Create Button -->
+    <button type="button" class="btn btn-success" @click="createModal">Create New</button>
   </div>
+  <!-- Search -->
   <div class="pl-5 mb-6">
     <div
       class="input input-lg flex max-w-sm space-x-4 focus-within:outline focus-within:outline-2 focus-within:outline-success focus-within:outline-offset-0 focus-within:ring-0 focus-within:border-transparent"
@@ -196,9 +221,13 @@ onMounted(() => {
     <template #updateAt="{ value }">
       <td class="hidden 2xl:table-cell">{{ value }}</td>
     </template>
-    <template #actions>
+    <template #actions="{ row }">
       <td class="hidden 2xl:table-cell">
-        <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+        <button
+          class="btn btn-circle btn-text btn-sm"
+          @click="editModal(row.no)"
+          aria-label="Action button"
+        >
           <span class="icon-[tabler--pencil] size-5"></span>
         </button>
         <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
@@ -231,7 +260,11 @@ onMounted(() => {
             </li>
             <li class="2xl:hidden">
               <span class="font-medium tracking-wider">ACTIONS:</span>
-              <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+              <button
+                class="btn btn-circle btn-text btn-sm"
+                @click="editModal(row.no)"
+                aria-label="Action button"
+              >
                 <span class="icon-[tabler--pencil] size-5"></span>
               </button>
               <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">

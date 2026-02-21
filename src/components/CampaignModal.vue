@@ -9,11 +9,13 @@ const props = defineProps({
   mode: String,
   editNo: Number,
 })
-const testList = ref([''])
-const newCampaign = ref({
+const testList = ref([])
+const defaultCampaign = {
   isTestMode: true,
   downloadBy: 'wifi',
-})
+}
+const newCampaign = ref(defaultCampaign)
+const hasExistingFile = ref(false)
 // vee-validate
 const { handleSubmit, setValues, resetForm } = useForm({
   validationSchema: schema,
@@ -24,6 +26,10 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL
 // for close modal
 const emit = defineEmits(['emit-close'])
 const close = () => {
+  resetForm()
+  testList.value = []
+  newCampaign.value = defaultCampaign
+  hasExistingFile.value = false
   emit('emit-close', false)
 }
 
@@ -42,8 +48,19 @@ const removeTestList = (index) => {
   }
 }
 
-// for createCampaign
-const createCampaign = handleSubmit(async (values) => {
+const formatFileSize = (bytes) => {
+  if (!bytes) return ''
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB'
+}
+const removeFile = (setValue) => {
+  setValue(null)
+  newCampaign.value.fileSize = 0
+  hasExistingFile.value = false
+}
+// for Create Campaign & Edit Campaign
+const campaignHandler = handleSubmit(async (values) => {
   try {
     const { file } = values
     const payload = {
@@ -51,30 +68,32 @@ const createCampaign = handleSubmit(async (values) => {
       ...newCampaign.value,
       testList: JSON.stringify(testList.value),
     }
-    payload.file = file.name
-    payload.fileSize = file.size
-    console.log(payload)
-    const result = await axios.post(`${BASE_URL}/campaign/create`, payload, {
+    if (!hasExistingFile.value) {
+      payload.file = file.name
+      payload.fileSize = file.size
+    }
+    const url =
+      props.mode == 'Create'
+        ? `${BASE_URL}/campaign/create`
+        : `${BASE_URL}/campaign/put?no=${props.editNo}`
+
+    const result = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
     })
-    if (result.data?.success) {
-      testList.value = ['']
-      newCampaign.value = {
-        isTestMode: true,
-        downloadBy: 'wifi',
-      }
-      refresh()
-      close()
+    if (!result.data?.success) {
+      // TODO if the message is failed
     }
-    // TODO if the message is failed
+    refresh()
+    close()
   } catch (error) {
     console.log(error)
     // TODO toast failed
   }
 })
 
+// for EditCampaign
 watch(
   () => props.show,
   async (visible) => {
@@ -85,8 +104,11 @@ watch(
           // TODO send failed toast
           close()
         }
-        const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode, testList } =
+        const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode, isEnabled } =
           result.data?.campaign
+        if (file && fileSize) {
+          hasExistingFile.value = true
+        }
         setValues({
           brand,
           model,
@@ -94,11 +116,15 @@ watch(
           tv,
           file,
         })
-        testList.value = testList ? JSON.parse(testList) : ['']
+        testList.value = result.data?.campaign?.testList
+          ? JSON.parse(result.data?.campaign?.testList)
+          : ['']
         newCampaign.value = {
           ...newCampaign.value,
           isTestMode,
           downloadBy,
+          fileSize,
+          isEnabled,
         }
       } catch (error) {
         console.log(error)
@@ -120,7 +146,7 @@ watch(
         <!-- Header -->
         <div class="flex justify-between items-center p-6 border-b">
           <h3 class="text-2xl font-semibold">
-            <slot name="title">{{ mode }} {{ editNo }} Campaign</slot>
+            <slot name="title">{{ mode }} Campaign</slot>
           </h3>
 
           <button class="text-gray-400 hover:text-gray-700" @click="close">✕</button>
@@ -161,8 +187,27 @@ watch(
 
           <div class="w-full mb-6">
             <label class="label-text">Upload File</label>
-            <Field name="file" v-slot="{ handleChange }">
-              <input type="file" class="input" accept="image/*" @change="handleChange" />
+            <Field name="file" v-slot="{ handleChange, setValue, value }">
+              <div
+                v-if="hasExistingFile"
+                class="flex items-center justify-between bg-base-200 p-3 rounded-xl"
+              >
+                <div>
+                  <p class="font-medium">{{ value }}</p>
+                  <p class="text-sm text-gray-500">
+                    {{ formatFileSize(newCampaign.fileSize) }}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary rounded-2xl"
+                  @click="removeFile(setValue)"
+                >
+                  Remove
+                </button>
+              </div>
+              <input v-else type="file" class="input" accept="image/*" @change="handleChange" />
             </Field>
             <ErrorMessage class="helper-text text-error" name="file" />
           </div>
@@ -230,14 +275,16 @@ watch(
           <slot name="footer">
             <button type="button" class="btn btn-soft" @click="close">Cancel</button>
             <button
-              type="submit"
+              type="button"
               v-if="mode == 'Create'"
               class="btn btn-primary"
-              @click="createCampaign"
+              @click="campaignHandler"
             >
               Create
             </button>
-            <button type="submit" v-else class="btn btn-primary">Save</button>
+            <button type="button" v-else class="btn btn-primary" @click="campaignHandler">
+              Save
+            </button>
           </slot>
         </div>
       </div>

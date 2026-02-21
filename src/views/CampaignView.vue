@@ -7,6 +7,7 @@ import axios from 'axios'
 import CampaignModal from '@/components/CampaignModal.vue'
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
+import Toast from '@/components/Toast.vue'
 
 // for campaign list
 const allCampaignList = ref([])
@@ -158,6 +159,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- <Toast /> -->
   <CampaignModal
     :show="modalValue"
     :mode="modalMode"

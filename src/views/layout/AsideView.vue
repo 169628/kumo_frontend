@@ -4,6 +4,7 @@ import Toast from '@/components/Toast.vue'
 
 <template>
   <div class="w-full min-h-screen flex">
+    <Toast />
     <aside
       id="logo-sidebar"
       class="overlay [--auto-close:md] md:shadow-none overlay-open:translate-x-0 drawer drawer-start hidden max-w-64 md:flex md:translate-x-0 border-r border-oklch-200 md:relative md:h-screen"

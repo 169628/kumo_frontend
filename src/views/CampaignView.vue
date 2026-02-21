@@ -1,13 +1,11 @@
 <script setup>
 import { onMounted, ref, computed, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useModalStore } from '@/stores/modalStore'
+import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
 
 import CampaignModal from '@/components/CampaignModal.vue'
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
-import Toast from '@/components/Toast.vue'
 
 // for campaign list
 const allCampaignList = ref([])
@@ -19,6 +17,9 @@ const dropdown = ref(null)
 const modalValue = ref(false)
 const modalMode = ref('Create')
 const editNo = ref(0)
+
+const toast = useToastStore()
+const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -92,11 +93,13 @@ const toggleDropdown = (no) => {
 const renderCampaignList = async () => {
   try {
     const result = await axios.get(`${BASE_URL}/campaign/getAll`)
-    // TODO if the message is failed
+    if (!result.data?.success) {
+      open('No data!!', 'error')
+    }
     allCampaignList.value = result.data?.campaign
   } catch (error) {
     console.log(error)
-    // TODO failed toast
+    open(error, 'error')
   }
 }
 // the keyword list
@@ -159,7 +162,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- <Toast /> -->
   <CampaignModal
     :show="modalValue"
     :mode="modalMode"
@@ -232,7 +234,11 @@ onMounted(() => {
         >
           <span class="icon-[tabler--pencil] size-5"></span>
         </button>
-        <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+        <button
+          class="btn btn-circle btn-text btn-sm"
+          aria-label="Action button"
+          @click="openToast"
+        >
           <span class="icon-[tabler--trash] size-5"></span>
         </button>
       </td>

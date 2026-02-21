@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { Form, useForm, Field, ErrorMessage } from 'vee-validate'
 import { schema } from '@/validations/campaignSchema'
+import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
 
 const props = defineProps({
@@ -20,6 +21,9 @@ const hasExistingFile = ref(false)
 const { handleSubmit, setValues, resetForm } = useForm({
   validationSchema: schema,
 })
+
+const toast = useToastStore()
+const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -87,9 +91,10 @@ const campaignHandler = handleSubmit(async (values) => {
     }
     refresh()
     close()
+    open(`${props.mode.toLowerCase()} success!!`)
   } catch (error) {
     console.log(error)
-    // TODO toast failed
+    open(`${props.mode.toLowerCase()} failed!!`)
   }
 })
 

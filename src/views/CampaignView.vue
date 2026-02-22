@@ -4,6 +4,7 @@ import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
 
 import CampaignModal from '@/components/CampaignModal.vue'
+import DeleteModal from '@/components/DeleteModal.vue'
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
 
@@ -17,6 +18,8 @@ const dropdown = ref(null)
 const modalValue = ref(false)
 const modalMode = ref('Create')
 const editNo = ref(0)
+// for delete modal
+const deleteModal = ref(false)
 
 const toast = useToastStore()
 const { open } = toast
@@ -94,9 +97,10 @@ const renderCampaignList = async () => {
   try {
     const result = await axios.get(`${BASE_URL}/campaign/getAll`)
     if (!result.data?.success) {
-      open('No data!!', 'error')
+      return open('No data!!', 'error')
     }
     allCampaignList.value = result.data?.campaign
+    currentPage.value = 1
   } catch (error) {
     console.log(error)
     open(error, 'error')
@@ -137,12 +141,14 @@ watch(keyword, () => {
   currentPage.value = 1
 })
 
-const createModal = () => {
-  modalMode.value = 'Create'
-  editNo.value = 0
+// for create & edit modal
+const openModal = (mode, campaignNo = 0) => {
+  modalMode.value = mode
+  editNo.value = campaignNo
   modalValue.value = true
 }
 const closeModal = (status) => {
+  editNo.value = 0
   modalValue.value = status
 }
 
@@ -150,10 +156,40 @@ const refresh = (status) => {
   if (status) renderCampaignList()
 }
 
-const editModal = (campainNo) => {
-  modalMode.value = 'Edit'
-  editNo.value = campainNo
-  modalValue.value = true
+// for other little button
+const changeEnable = async (campaignNo) => {
+  try {
+    const lastInfo = await axios.get(`${BASE_URL}/campaign/getOne?no=${campaignNo}`)
+    if (!lastInfo.data?.success) {
+      return open('failed to get the last info', 'error')
+    }
+    const { campaign } = lastInfo.data
+    campaign.isEnabled = !campaign.isEnabled
+    const result = await axios.post(`${BASE_URL}/campaign/put?no=${campaignNo}`, campaign, {
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    })
+    if (!result.data?.success) {
+      return open('failed to change the enable', 'error')
+    }
+
+    open('the enable button is changed!!')
+    return renderCampaignList()
+  } catch (error) {
+    console.log(error)
+    open('failed to change the enable')
+  }
+}
+
+const openDeleteModal = (campaignNo) => {
+  editNo.value = campaignNo
+  deleteModal.value = true
+}
+
+const closeDeleteModal = (status) => {
+  editNo.value = 0
+  deleteModal.value = status
 }
 
 onMounted(() => {
@@ -162,6 +198,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <DeleteModal
+    :show="deleteModal"
+    :editNo="editNo"
+    @emit-close="closeDeleteModal"
+    @emit-refresh="refresh"
+  />
   <CampaignModal
     :show="modalValue"
     :mode="modalMode"
@@ -172,7 +214,7 @@ onMounted(() => {
   <div class="flex justify-between mb-6 px-5">
     <h1 class="text-2xl">Campaign</h1>
     <!-- Create Button -->
-    <button type="button" class="btn btn-success" @click="createModal">Create New</button>
+    <button type="button" class="btn btn-success" @click="openModal('create')">Create New</button>
   </div>
   <!-- Search -->
   <div class="pl-5 mb-6">
@@ -200,13 +242,14 @@ onMounted(() => {
         ></span>
       </td>
     </template>
-    <template #isEnabled="{ value }">
+    <template #isEnabled="{ value, row }">
       <td>
         <input
           type="checkbox"
           class="switch switch-success"
           id="switchSuccess1"
           :checked="value == 'true'"
+          @click="changeEnable(row.no)"
         />
       </td>
     </template>
@@ -229,7 +272,7 @@ onMounted(() => {
       <td class="hidden 2xl:table-cell">
         <button
           class="btn btn-circle btn-text btn-sm"
-          @click="editModal(row.no)"
+          @click="openModal('edit', row.no)"
           aria-label="Action button"
         >
           <span class="icon-[tabler--pencil] size-5"></span>
@@ -237,7 +280,7 @@ onMounted(() => {
         <button
           class="btn btn-circle btn-text btn-sm"
           aria-label="Action button"
-          @click="openToast"
+          @click="openDeleteModal(row.no)"
         >
           <span class="icon-[tabler--trash] size-5"></span>
         </button>
@@ -270,12 +313,16 @@ onMounted(() => {
               <span class="font-medium tracking-wider">ACTIONS:</span>
               <button
                 class="btn btn-circle btn-text btn-sm"
-                @click="editModal(row.no)"
+                @click="openModal('edit', row.no)"
                 aria-label="Action button"
               >
                 <span class="icon-[tabler--pencil] size-5"></span>
               </button>
-              <button class="btn btn-circle btn-text btn-sm" aria-label="Action button">
+              <button
+                class="btn btn-circle btn-text btn-sm"
+                aria-label="Action button"
+                @click="openDeleteModal(row.no)"
+              >
                 <span class="icon-[tabler--trash] size-5"></span>
               </button>
             </li></ul

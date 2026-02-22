@@ -77,7 +77,7 @@ const campaignHandler = handleSubmit(async (values) => {
       payload.fileSize = file.size
     }
     const url =
-      props.mode == 'Create'
+      props.mode == 'create'
         ? `${BASE_URL}/campaign/create`
         : `${BASE_URL}/campaign/put?no=${props.editNo}`
 
@@ -87,14 +87,17 @@ const campaignHandler = handleSubmit(async (values) => {
       },
     })
     if (!result.data?.success) {
-      // TODO if the message is failed
+      refresh()
+      close()
+      return open(`${props.mode.toLowerCase()} failed!!`, 'error')
     }
     refresh()
     close()
-    open(`${props.mode.toLowerCase()} success!!`)
+    return open(`${props.mode.toLowerCase()} success!!`)
   } catch (error) {
     console.log(error)
-    open(`${props.mode.toLowerCase()} failed!!`)
+    close()
+    open(`${props.mode.toLowerCase()} failed!!`, 'error')
   }
 })
 
@@ -102,12 +105,12 @@ const campaignHandler = handleSubmit(async (values) => {
 watch(
   () => props.show,
   async (visible) => {
-    if (visible && props.mode === 'Edit' && props.editNo) {
+    if (visible && props.mode == 'edit' && props.editNo) {
       try {
         const result = await axios.get(`${BASE_URL}/campaign/getOne?no=${props.editNo}`)
         if (!result.data?.success) {
-          // TODO send failed toast
           close()
+          return open('error, please contact admin!!', 'error')
         }
         const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode, isEnabled } =
           result.data?.campaign
@@ -133,6 +136,8 @@ watch(
         }
       } catch (error) {
         console.log(error)
+        close()
+        open('error!!!', 'error')
       }
     }
   },
@@ -150,9 +155,8 @@ watch(
       >
         <!-- Header -->
         <div class="flex justify-between items-center p-6 border-b">
-          <h3 class="text-2xl font-semibold">
-            <slot name="title">{{ mode }} Campaign</slot>
-          </h3>
+          <h3 v-if="mode == 'create'" class="text-2xl font-semibold">Create Campaign</h3>
+          <h3 v-else class="text-2xl font-semibold">Edit Campaign No. {{ props.editNo }}</h3>
 
           <button class="text-gray-400 hover:text-gray-700" @click="close">✕</button>
         </div>
@@ -281,7 +285,7 @@ watch(
             <button type="button" class="btn btn-soft" @click="close">Cancel</button>
             <button
               type="button"
-              v-if="mode == 'Create'"
+              v-if="mode == 'create'"
               class="btn btn-primary"
               @click="campaignHandler"
             >

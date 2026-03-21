@@ -95,11 +95,11 @@ const toggleDropdown = (no) => {
 // get all data from backend
 const renderCampaignList = async () => {
   try {
-    const result = await axios.get(`${BASE_URL}/campaign/getAll`)
+    const result = await axios.get(`${BASE_URL}/api/campaign`)
     if (!result.data?.success) {
       return open('No data!!', 'error')
     }
-    allCampaignList.value = result.data?.campaign
+    allCampaignList.value = result.data?.campaignList
     currentPage.value = 1
   } catch (error) {
     console.log(error)
@@ -159,13 +159,13 @@ const refresh = (status) => {
 // for other little button
 const changeEnable = async (campaignNo) => {
   try {
-    const lastInfo = await axios.get(`${BASE_URL}/campaign/getOne?no=${campaignNo}`)
+    const lastInfo = await axios.get(`${BASE_URL}/api/campaign/${campaignNo}`)
     if (!lastInfo.data?.success) {
       return open('failed to get the last info', 'error')
     }
-    const { campaign } = lastInfo.data
-    campaign.isEnabled = !campaign.isEnabled
-    const result = await axios.post(`${BASE_URL}/campaign/put?no=${campaignNo}`, campaign, {
+    const { campaignDTO } = lastInfo.data
+    campaignDTO.isEnabled = !campaignDTO.isEnabled
+    const result = await axios.put(`${BASE_URL}/api/campaign/${campaignNo}`, campaignDTO, {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -178,7 +178,7 @@ const changeEnable = async (campaignNo) => {
     return renderCampaignList()
   } catch (error) {
     console.log(error)
-    open('failed to change the enable')
+    open('failed to change the enable', 'error')
   }
 }
 

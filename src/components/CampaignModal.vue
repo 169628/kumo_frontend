@@ -76,16 +76,22 @@ const campaignHandler = handleSubmit(async (values) => {
       payload.file = file.name
       payload.fileSize = file.size
     }
-    const url =
-      props.mode == 'create'
-        ? `${BASE_URL}/campaign/create`
-        : `${BASE_URL}/campaign/put?no=${props.editNo}`
 
-    const result = await axios.post(url, payload, {
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    })
+    let result
+    if (props.mode == 'create') {
+      result = await axios.post(`${BASE_URL}/api/campaign`, payload, {
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      })
+    } else {
+      result = await axios.put(`${BASE_URL}/api/campaign/${props.editNo}`, payload, {
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      })
+    }
+
     if (!result.data?.success) {
       refresh()
       close()
@@ -107,13 +113,13 @@ watch(
   async (visible) => {
     if (visible && props.mode == 'edit' && props.editNo) {
       try {
-        const result = await axios.get(`${BASE_URL}/campaign/getOne?no=${props.editNo}`)
+        const result = await axios.get(`${BASE_URL}/api/campaign/${props.editNo}`)
         if (!result.data?.success) {
           close()
           return open('error, please contact admin!!', 'error')
         }
         const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode, isEnabled } =
-          result.data?.campaign
+          result.data?.campaignDTO
         if (file && fileSize) {
           hasExistingFile.value = true
         }
@@ -124,8 +130,8 @@ watch(
           tv,
           file,
         })
-        testList.value = result.data?.campaign?.testList
-          ? JSON.parse(result.data?.campaign?.testList)
+        testList.value = result.data?.campaignDTO?.testList
+          ? JSON.parse(result.data?.campaignDTO?.testList)
           : ['']
         newCampaign.value = {
           ...newCampaign.value,

@@ -26,10 +26,7 @@ const refresh = () => {
 
 const deleteCampaign = async () => {
   try {
-    const payload = {
-      no: props.editNo,
-    }
-    const result = await axios.post(`${BASE_URL}/campaign/delete`, payload, {
+    const result = await axios.delete(`${BASE_URL}/api/campaign/${props.editNo}`, {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },

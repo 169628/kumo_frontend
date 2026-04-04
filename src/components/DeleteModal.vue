@@ -5,6 +5,7 @@ import axios from 'axios'
 
 const props = defineProps({
   show: Boolean,
+  campaign: Object,
   editNo: Number,
 })
 
@@ -26,12 +27,8 @@ const refresh = () => {
 
 const deleteCampaign = async () => {
   try {
-    const result = await axios.delete(`${BASE_URL}/api/campaign/${props.editNo}`, {
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    })
-    if (!result.data?.success) {
+    const result = await axios.delete(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`)
+    if (result.data?.status != 1) {
       close()
       open('failed to delete the campaign', 'error')
       return

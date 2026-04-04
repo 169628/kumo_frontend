@@ -17,6 +17,7 @@ const dropdown = ref(null)
 // for create & edit modal
 const modalValue = ref(false)
 const modalMode = ref('Create')
+const campaign = ref({})
 const editNo = ref(0)
 // for delete modal
 const deleteModal = ref(false)
@@ -96,10 +97,10 @@ const toggleDropdown = (no) => {
 const renderCampaignList = async () => {
   try {
     const result = await axios.get(`${BASE_URL}/api/campaign`)
-    if (!result.data?.success) {
+    if (result.data?.status != 1) {
       return open('No data!!', 'error')
     }
-    allCampaignList.value = result.data?.campaignList
+    allCampaignList.value = result.data?.data
     currentPage.value = 1
   } catch (error) {
     console.log(error)
@@ -128,7 +129,6 @@ const totalPage = computed(() => {
 const pagedCampaignList = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   const end = start + pageSize
-
   return campaignList.value.slice(start, end)
 })
 // page from Pagination
@@ -142,9 +142,10 @@ watch(keyword, () => {
 })
 
 // for create & edit modal
-const openModal = (mode, campaignNo = 0) => {
+const openModal = (mode, campaignValue = {}, campaignNo = 0) => {
   modalMode.value = mode
   editNo.value = campaignNo
+  campaign.value = campaignValue
   modalValue.value = true
 }
 const closeModal = (status) => {
@@ -157,20 +158,10 @@ const refresh = (status) => {
 }
 
 // for other little button
-const changeEnable = async (campaignNo) => {
+const changeEnable = async (campaignId) => {
   try {
-    const lastInfo = await axios.get(`${BASE_URL}/api/campaign/${campaignNo}`)
-    if (!lastInfo.data?.success) {
-      return open('failed to get the last info', 'error')
-    }
-    const { campaignDTO } = lastInfo.data
-    campaignDTO.isEnabled = !campaignDTO.isEnabled
-    const result = await axios.put(`${BASE_URL}/api/campaign/${campaignNo}`, campaignDTO, {
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-    })
-    if (!result.data?.success) {
+    const result = await axios.put(`${BASE_URL}/api/campaign/enable/${campaignId}`)
+    if (result.data?.status != 1) {
       return open('failed to change the enable', 'error')
     }
 
@@ -182,8 +173,9 @@ const changeEnable = async (campaignNo) => {
   }
 }
 
-const openDeleteModal = (campaignNo) => {
+const openDeleteModal = (campaignValue, campaignNo) => {
   editNo.value = campaignNo
+  campaign.value = campaignValue
   deleteModal.value = true
 }
 
@@ -201,6 +193,7 @@ onMounted(() => {
   <DeleteModal
     :show="deleteModal"
     :editNo="editNo"
+    :campaign="campaign"
     @emit-close="closeDeleteModal"
     @emit-refresh="refresh"
   />
@@ -208,6 +201,7 @@ onMounted(() => {
     :show="modalValue"
     :mode="modalMode"
     :editNo="editNo"
+    :campaign="campaign"
     @emit-close="closeModal"
     @emit-refresh="refresh"
   />
@@ -249,7 +243,7 @@ onMounted(() => {
           class="switch switch-success"
           id="switchSuccess1"
           :checked="value == 'true'"
-          @click="changeEnable(row.no)"
+          @click="changeEnable(row.campaignId)"
         />
       </td>
     </template>
@@ -272,7 +266,7 @@ onMounted(() => {
       <td class="hidden 2xl:table-cell">
         <button
           class="btn btn-circle btn-text btn-sm"
-          @click="openModal('edit', row.no)"
+          @click="openModal('edit', row, row.no)"
           aria-label="Action button"
         >
           <span class="icon-[tabler--pencil] size-5"></span>
@@ -280,7 +274,7 @@ onMounted(() => {
         <button
           class="btn btn-circle btn-text btn-sm"
           aria-label="Action button"
-          @click="openDeleteModal(row.no)"
+          @click="openDeleteModal(row, row.no)"
         >
           <span class="icon-[tabler--trash] size-5"></span>
         </button>
@@ -313,7 +307,7 @@ onMounted(() => {
               <span class="font-medium tracking-wider">ACTIONS:</span>
               <button
                 class="btn btn-circle btn-text btn-sm"
-                @click="openModal('edit', row.no)"
+                @click="openModal('edit', row, row.no)"
                 aria-label="Action button"
               >
                 <span class="icon-[tabler--pencil] size-5"></span>
@@ -321,7 +315,7 @@ onMounted(() => {
               <button
                 class="btn btn-circle btn-text btn-sm"
                 aria-label="Action button"
-                @click="openDeleteModal(row.no)"
+                @click="openDeleteModal(row, row.no)"
               >
                 <span class="icon-[tabler--trash] size-5"></span>
               </button>

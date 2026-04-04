@@ -17,7 +17,7 @@ const props = defineProps({
         </tr>
       </thead>
       <tbody>
-        <template v-for="r in props.rows" :key="r.campaign_id">
+        <template v-for="r in props.rows" :key="r.campaignId">
           <tr class="row-hover">
             <template v-for="c in props.columns" :key="c.key">
               <slot :name="`${c.key}`" :value="`${r[c.key]}`" :row="r">

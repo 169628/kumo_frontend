@@ -8,6 +8,7 @@ import axios from 'axios'
 const props = defineProps({
   show: Boolean,
   mode: String,
+  campaign: Object,
   editNo: Number,
 })
 const testList = ref([])
@@ -15,6 +16,7 @@ const defaultCampaign = {
   isTestMode: true,
   downloadBy: 'wifi',
 }
+const oldCampaign = ref({})
 const newCampaign = ref(defaultCampaign)
 const hasExistingFile = ref(false)
 // vee-validate
@@ -28,12 +30,13 @@ const { open } = toast
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // for close modal
-const emit = defineEmits(['emit-close'])
+const emit = defineEmits(['emit-close', 'emit-refresh'])
 const close = () => {
   resetForm()
   testList.value = []
-  newCampaign.value = defaultCampaign
+  newCampaign.value = { ...defaultCampaign }
   hasExistingFile.value = false
+  oldCampaign.value = {}
   emit('emit-close', false)
 }
 
@@ -67,14 +70,31 @@ const removeFile = (setValue) => {
 const campaignHandler = handleSubmit(async (values) => {
   try {
     const { file } = values
-    const payload = {
-      ...values,
-      ...newCampaign.value,
-      testList: JSON.stringify(testList.value),
+    const payload = {}
+    if (values.brand != oldCampaign.value.brand) {
+      payload.brand = values.brand
     }
-    if (!hasExistingFile.value) {
+    if (values.model != oldCampaign.value.model) {
+      payload.model = values.model
+    }
+    if (values.sv != oldCampaign.value.sv) {
+      payload.sv = values.sv
+    }
+    if (values.tv != oldCampaign.value.tv) {
+      payload.tv = values.tv
+    }
+    if (file instanceof File) {
       payload.file = file.name
       payload.fileSize = file.size
+    }
+    if (newCampaign.value.isTestMode != oldCampaign.value.isTestMode) {
+      payload.isTestMode = newCampaign.value.isTestMode
+    }
+    if (JSON.stringify(testList.value) !== JSON.stringify(oldCampaign.value.testList)) {
+      payload.testList = testList.value
+    }
+    if (newCampaign.value.downloadBy != oldCampaign.value.downloadBy) {
+      payload.downloadById = newCampaign.value.downloadBy == 'wifi' ? 1 : 2
     }
 
     let result
@@ -85,14 +105,14 @@ const campaignHandler = handleSubmit(async (values) => {
         },
       })
     } else {
-      result = await axios.put(`${BASE_URL}/api/campaign/${props.editNo}`, payload, {
+      result = await axios.put(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`, payload, {
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },
       })
     }
 
-    if (!result.data?.success) {
+    if (result.data?.status != 1) {
       refresh()
       close()
       return open(`${props.mode.toLowerCase()} failed!!`, 'error')
@@ -102,6 +122,7 @@ const campaignHandler = handleSubmit(async (values) => {
     return open(`${props.mode.toLowerCase()} success!!`)
   } catch (error) {
     console.log(error)
+    refresh()
     close()
     open(`${props.mode.toLowerCase()} failed!!`, 'error')
   }
@@ -113,13 +134,13 @@ watch(
   async (visible) => {
     if (visible && props.mode == 'edit' && props.editNo) {
       try {
-        const result = await axios.get(`${BASE_URL}/api/campaign/${props.editNo}`)
-        if (!result.data?.success) {
+        const result = await axios.get(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`)
+        if (result.data?.status != 1) {
           close()
-          return open('error, please contact admin!!', 'error')
+          return open('error, can not find the campaign!!', 'error')
         }
-        const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode, isEnabled } =
-          result.data?.campaignDTO
+        oldCampaign.value = result.data?.data
+        const { brand, model, sv, tv, downloadBy, file, fileSize, isTestMode } = result.data?.data
         if (file && fileSize) {
           hasExistingFile.value = true
         }
@@ -130,18 +151,16 @@ watch(
           tv,
           file,
         })
-        testList.value = result.data?.campaignDTO?.testList
-          ? JSON.parse(result.data?.campaignDTO?.testList)
-          : ['']
+        testList.value = [...result.data?.data?.testList]
         newCampaign.value = {
           ...newCampaign.value,
           isTestMode,
           downloadBy,
           fileSize,
-          isEnabled,
         }
       } catch (error) {
         console.log(error)
+        refresh()
         close()
         open('error!!!', 'error')
       }

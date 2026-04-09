@@ -1,6 +1,25 @@
 <script setup>
+import { onMounted, ref, computed, watch } from 'vue'
+import { useToastStore } from '@/stores/toastStore'
+import axios from 'axios'
+
+import LogModal from '@/components/LogModal.vue'
 import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
+
+const allDeviceList = ref([])
+const keyword = ref('')
+const pageSize = 5
+const currentPage = ref(1)
+const dropdown = ref(null)
+// for log modal
+const logModal = ref(false)
+const device = ref({})
+
+const toast = useToastStore()
+const { open } = toast
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const columns = [
   {
@@ -34,124 +53,92 @@ const columns = [
     title: 'STATUS',
   },
   {
-    key: 'first_connect',
+    key: 'firstConnect',
     class: 'hidden xl:table-cell',
     title: 'FIRST CONNECT',
   },
   {
-    key: 'reported_at',
+    key: 'reportedAt',
     class: 'hidden xl:table-cell',
     title: 'LAST CONNECT',
   },
 ]
-const deviceList = [
-  {
-    device_id: 123456789012345670,
-    sn: 'kumotest2507',
-    brand: 'Projector',
-    model: 'L1',
-    sv: 'v1.0.2',
-    first_connect: '2023-11-01',
-    status: 'success',
-    reported_at: '2026-01-13',
-  },
-  {
-    device_id: 123456789012345671,
-    sn: 'kumotest2508',
-    brand: 'Projector',
-    model: 'L1',
-    sv: 'v1.0.2',
-    first_connect: '2023-11-05',
-    status: 'success',
-    reported_at: '2026-01-13',
-  },
-  {
-    device_id: 123456789012345672,
-    sn: 'kumotest2509',
-    brand: 'Projector',
-    model: 'L1',
-    sv: 'v1.0.1',
-    first_connect: '2023-11-10',
-    status: 'failed',
-    reported_at: '2026-01-12',
-  },
-  {
-    device_id: 123456789012345673,
-    sn: 'kumotest2510',
-    brand: 'Projector',
-    model: 'L2',
-    sv: 'v1.1.0',
-    first_connect: '2023-11-15',
-    status: 'success',
-    reported_at: '2026-01-14',
-  },
-  {
-    device_id: 123456789012345674,
-    sn: 'kumotest2511',
-    brand: 'Projector',
-    model: 'L2',
-    sv: 'v1.1.0',
-    first_connect: '2023-11-20',
-    status: 'pending',
-    reported_at: '2026-01-14',
-  },
-  {
-    device_id: 123456789012345675,
-    sn: 'kumotest2512',
-    brand: 'Projector',
-    model: 'L3',
-    sv: 'v2.0.0',
-    first_connect: '2023-12-01',
-    status: 'success',
-    reported_at: '2026-01-15',
-  },
-  {
-    device_id: 123456789012345676,
-    sn: 'kumotest2513',
-    brand: 'Projector',
-    model: 'L3',
-    sv: 'v2.0.0',
-    first_connect: '2023-12-05',
-    status: 'success',
-    reported_at: '2026-01-15',
-  },
-  {
-    device_id: 123456789012345677,
-    sn: 'kumotest2514',
-    brand: 'Projector',
-    model: 'L3',
-    sv: 'v2.0.1',
-    first_connect: '2023-12-10',
-    status: 'failed',
-    reported_at: '2026-01-16',
-  },
-  {
-    device_id: 123456789012345678,
-    sn: 'kumotest2515',
-    brand: 'Projector',
-    model: 'L4',
-    sv: 'v2.1.0',
-    first_connect: '2023-12-15',
-    status: 'success',
-    reported_at: '2026-01-16',
-  },
-  {
-    device_id: 123456789012345679,
-    sn: 'kumotest2516',
-    brand: 'Projector',
-    model: 'L4',
-    sv: 'v2.1.0',
-    first_connect: '2023-12-20',
-    status: 'pending',
-    reported_at: '2026-01-17',
-  },
-]
+// RWD toggle dropdown
+const toggleDropdown = (no) => {
+  if (dropdown.value == no) {
+    dropdown.value = null
+  } else {
+    dropdown.value = no
+  }
+}
+// get all data from backend
+const renderDeviceList = async () => {
+  try {
+    const result = await axios.get(`${BASE_URL}/api/device`)
+    if (result.data?.status != 1) {
+      return open('Something wrong!', 'error')
+    }
+    allDeviceList.value = result.data?.data
+    currentPage.value = 1
+  } catch (error) {
+    console.log(error)
+    open(error, 'error')
+  }
+}
+// the keyword list
+const deviceList = computed(() => {
+  const k = keyword.value.toLowerCase()
+
+  if (!k) return allDeviceList.value
+
+  return allDeviceList.value.filter((item) => {
+    return (
+      item.sn.toLowerCase().includes(k) ||
+      item.brand?.toLowerCase().includes(k) ||
+      item.model?.toLowerCase().includes(k)
+    )
+  })
+})
+// for the pagination
+const totalPage = computed(() => {
+  return Math.ceil(deviceList.value.length / pageSize)
+})
+// only show 'pageSize' data to this page
+const pagedDeviceList = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  const end = start + pageSize
+  return deviceList.value.slice(start, end)
+})
+// page from Pagination
+const changePage = (n) => {
+  if (!n) return
+  currentPage.value = n
+}
+// if keyword changed back to page 1
+watch(keyword, () => {
+  currentPage.value = 1
+})
+
+const showLog = (item) => {
+  logModal.value = true
+  device.value = item
+}
+const closeLogModal = (status) => {
+  device.value = {}
+  logModal.value = status
+}
+
+onMounted(() => {
+  renderDeviceList()
+})
 </script>
 
 <template>
+  <LogModal :show="logModal" :device="device" @emit-close="closeLogModal" />
   <div class="flex justify-between mb-6 px-5">
     <h1 class="text-2xl">Device</h1>
   </div>
+  <!-- Search -->
   <div class="pl-5 mb-6">
     <div
       class="input input-lg flex max-w-sm space-x-4 focus-within:outline focus-within:outline-2 focus-within:outline-success focus-within:outline-offset-0 focus-within:ring-0 focus-within:border-transparent"
@@ -160,22 +147,26 @@ const deviceList = [
       <input
         type="search"
         class="grow focus:outline-none focus:ring-0"
-        placeholder="Search"
+        placeholder="Search By SN or Brand or Model"
         id="kbdInput"
+        v-model="keyword"
       />
       <label class="sr-only" for="kbdInput">Search</label>
     </div>
   </div>
-  <Table :columns="columns" :rows="deviceList">
-    <template #arrow>
+  <Table :columns="columns" :rows="pagedDeviceList">
+    <template #arrow="{ row }">
       <td class="xl:hidden">
-        <span class="icon-[tabler--chevron-right] size-5"></span>
-        <span class="icon-[tabler--chevron-down] size-5"></span>
+        <span
+          class="icon-[tabler--chevron-right] size-5"
+          :class="dropdown == row.deviceId && 'rotate-90'"
+          @click="toggleDropdown(row.deviceId)"
+        ></span>
       </td>
     </template>
-    <template #sn="{ value }">
+    <template #sn="{ value, row }">
       <td>
-        <a href="#" class="link text-success">{{ value }}</a>
+        <a href="#" @click.prevent="showLog(row)" class="link text-success">{{ value }}</a>
       </td>
     </template>
     <template #sv="{ value }">
@@ -184,31 +175,37 @@ const deviceList = [
     <template #status="{ value }">
       <td class="hidden lg:table-cell">{{ value }}</td>
     </template>
-    <template #first_connect="{ value }">
+    <template #firstConnect="{ value }">
       <td class="hidden xl:table-cell">{{ value }}</td>
     </template>
-    <template #reported_at="{ value }">
+    <template #reportedAt="{ value }">
       <td class="hidden xl:table-cell">{{ value }}</td>
     </template>
 
     <template #hiddenArea="{ row }">
       <td colspan="4" class="xl:hidden">
-        <ul>
-          <li class="lg:hidden">
-            <span class="font-medium tracking-wider">SV:</span> {{ row.sv }}
-          </li>
-          <li class="lg:hidden">
-            <span class="font-medium tracking-wider">STATUS:</span> {{ row.status }}
-          </li>
-          <li class="xl:hidden">
-            <span class="font-medium tracking-wider">FIRST CONNECT:</span> {{ row.first_connect }}
-          </li>
-          <li class="xl:hidden">
-            <span class="font-medium tracking-wider">LAST CONNECT:</span> {{ row.reported_at }}
-          </li>
-        </ul>
+        <Transition
+          enter-active-class="transition-all duration-200 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+        >
+          <ul v-if="dropdown == row.deviceId">
+            <li class="lg:hidden">
+              <span class="font-medium tracking-wider">SV:</span> {{ row.sv }}
+            </li>
+            <li class="lg:hidden">
+              <span class="font-medium tracking-wider">STATUS:</span> {{ row.status }}
+            </li>
+            <li class="xl:hidden">
+              <span class="font-medium tracking-wider">FIRST CONNECT:</span> {{ row.firstConnect }}
+            </li>
+            <li class="xl:hidden">
+              <span class="font-medium tracking-wider">LAST CONNECT:</span> {{ row.reportedAt }}
+            </li>
+          </ul>
+        </Transition>
       </td>
     </template>
   </Table>
-  <Pagination />
+  <Pagination :page="totalPage" :current="currentPage" @emit-changePage="changePage" />
 </template>

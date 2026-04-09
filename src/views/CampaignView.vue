@@ -98,7 +98,7 @@ const renderCampaignList = async () => {
   try {
     const result = await axios.get(`${BASE_URL}/api/campaign`)
     if (result.data?.status != 1) {
-      return open('No data!!', 'error')
+      return open('Something wrong!', 'error')
     }
     allCampaignList.value = result.data?.data
     currentPage.value = 1
@@ -132,7 +132,7 @@ const pagedCampaignList = computed(() => {
   return campaignList.value.slice(start, end)
 })
 // page from Pagination
-const chagePage = (n) => {
+const changePage = (n) => {
   if (!n) return
   currentPage.value = n
 }
@@ -324,5 +324,5 @@ onMounted(() => {
       </td>
     </template>
   </Table>
-  <Pagination :page="totalPage" :current="currentPage" @emit-changePage="chagePage" />
+  <Pagination :page="totalPage" :current="currentPage" @emit-changePage="changePage" />
 </template>

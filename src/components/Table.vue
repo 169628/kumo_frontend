@@ -1,5 +1,4 @@
 <script setup>
-//import TheWelcome from '../components/TheWelcome.vue'
 const props = defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, required: true },

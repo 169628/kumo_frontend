@@ -1,20 +1,63 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useToastStore } from '@/stores/toastStore'
+import axios from 'axios'
 
+const devicesMaps = ref([])
 const series = ref([
   {
-    name: 'B phone',
-    data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
+    name: 'Projector',
+    data: [],
   },
   {
-    name: 'Some Song',
-    data: [76, 85, 101, 98, 87, 105, 91, 114, 94],
+    name: 'Monitor',
+    data: [],
   },
   {
-    name: 'Oppa',
-    data: [35, 41, 36, 26, 45, 48, 52, 53, 41],
+    name: 'Robot Vacuum',
+    data: [],
   },
 ])
+const toast = useToastStore()
+const { open } = toast
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+// made by ai
+const getLast7Days = () => {
+  const categoriesList = []
+  const today = new Date()
+
+  for (let i = 0; i <= 6; i++) {
+    const date = new Date()
+    date.setDate(today.getDate() - i)
+
+    const month = date.toLocaleString('en-US', { month: 'short' })
+    const day = date.getDate()
+
+    const suffix = getDaySuffix(day)
+
+    categoriesList.push(`${month}-${day}${suffix}`)
+  }
+
+  return categoriesList
+}
+
+// made by ai
+const getDaySuffix = (day) => {
+  if (day >= 11 && day <= 13) return 'th'
+
+  switch (day % 10) {
+    case 1:
+      return 'st'
+    case 2:
+      return 'nd'
+    case 3:
+      return 'rd'
+    default:
+      return 'th'
+  }
+}
 
 const chartOptions = ref({
   chart: {
@@ -41,21 +84,11 @@ const chartOptions = ref({
     colors: ['transparent'],
   },
   xaxis: {
-    categories: [
-      'Nov-1st',
-      'Nov-2nd',
-      'Nov-3rd',
-      'Nov-4th',
-      'Nov-5th',
-      'Nov-6th',
-      'Nov-7th',
-      'Nov-8th',
-      'Nov-9th',
-    ],
+    categories: getLast7Days(),
   },
   yaxis: {
     title: {
-      text: 'Success Status',
+      text: 'Received Status',
     },
   },
   fill: {
@@ -63,11 +96,41 @@ const chartOptions = ref({
   },
   tooltip: {
     y: {
-      formatter(val) {
-        return val + ' Update Success'
+      formatter(val, { seriesIndex, dataPointIndex }) {
+        const devices = devicesMaps.value[seriesIndex]?.[dataPointIndex] || []
+
+        return `${val} received ${devices.join(', ')}`
       },
     },
   },
+})
+
+onMounted(async () => {
+  try {
+    const result = await axios.get(`${BASE_URL}/api/report/received`)
+    if (result.data?.status != 1) {
+      return open('Something wrong!', 'error')
+    }
+    const { deviceMap, projector, monitor, robotVacuum } = result.data?.data
+    devicesMaps.value = deviceMap
+    series.value = [
+      {
+        name: 'Projector',
+        data: projector,
+      },
+      {
+        name: 'Monitor',
+        data: monitor,
+      },
+      {
+        name: 'Robot Vacuum',
+        data: robotVacuum,
+      },
+    ]
+  } catch (error) {
+    console.log(error)
+    open(error, 'error')
+  }
 })
 </script>
 

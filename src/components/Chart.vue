@@ -22,6 +22,8 @@ const toast = useToastStore()
 const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const token = localStorage.getItem('kumo')
+const header = { headers: { Authorization: `Bearer ${token}` } }
 
 // made by ai
 const getLast7Days = () => {
@@ -107,7 +109,7 @@ const chartOptions = ref({
 
 onMounted(async () => {
   try {
-    const result = await axios.get(`${BASE_URL}/api/report/received`)
+    const result = await axios.get(`${BASE_URL}/api/report/received`, header)
     if (result.data?.status != 1) {
       return open('Something wrong!', 'error')
     }
@@ -129,7 +131,7 @@ onMounted(async () => {
     ]
   } catch (error) {
     console.log(error)
-    open(error, 'error')
+    open('error', 'error')
   }
 })
 </script>

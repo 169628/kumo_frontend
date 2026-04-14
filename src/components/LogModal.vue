@@ -13,6 +13,8 @@ const toast = useToastStore()
 const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const token = localStorage.getItem('kumo')
+const header = { headers: { Authorization: `Bearer ${token}` } }
 
 // for close modal
 const emit = defineEmits(['emit-close'])
@@ -26,7 +28,7 @@ watch(
   async (visible) => {
     if (visible) {
       try {
-        const result = await axios.get(`${BASE_URL}/api/device/${props.device?.deviceId}`)
+        const result = await axios.get(`${BASE_URL}/api/device/${props.device?.deviceId}`, header)
         if (result.data?.status != 1) {
           close()
           return open('error, can not find any log!!', 'error')

@@ -20,6 +20,8 @@ const toast = useToastStore()
 const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const token = localStorage.getItem('kumo')
+const header = { headers: { Authorization: `Bearer ${token}` } }
 
 const columns = [
   {
@@ -74,7 +76,7 @@ const toggleDropdown = (no) => {
 // get all data from backend
 const renderDeviceList = async () => {
   try {
-    const result = await axios.get(`${BASE_URL}/api/device`)
+    const result = await axios.get(`${BASE_URL}/api/device`, header)
     if (result.data?.status != 1) {
       return open('Something wrong!', 'error')
     }

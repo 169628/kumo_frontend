@@ -28,6 +28,8 @@ const toast = useToastStore()
 const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const token = localStorage.getItem('kumo')
+const header = { headers: { Authorization: `Bearer ${token}` } }
 
 // for close modal
 const emit = defineEmits(['emit-close', 'emit-refresh'])
@@ -99,17 +101,13 @@ const campaignHandler = handleSubmit(async (values) => {
 
     let result
     if (props.mode == 'create') {
-      result = await axios.post(`${BASE_URL}/api/campaign`, payload, {
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      })
+      result = await axios.post(`${BASE_URL}/api/campaign`, payload, header)
     } else {
-      result = await axios.put(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`, payload, {
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      })
+      result = await axios.put(
+        `${BASE_URL}/api/campaign/${props.campaign?.campaignId}`,
+        payload,
+        header,
+      )
     }
 
     if (result.data?.status != 1) {
@@ -134,7 +132,10 @@ watch(
   async (visible) => {
     if (visible && props.mode == 'edit' && props.editNo) {
       try {
-        const result = await axios.get(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`)
+        const result = await axios.get(
+          `${BASE_URL}/api/campaign/${props.campaign?.campaignId}`,
+          header,
+        )
         if (result.data?.status != 1) {
           close()
           return open('error, can not find the campaign!!', 'error')

@@ -1,5 +1,4 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
 import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
 
@@ -13,6 +12,8 @@ const toast = useToastStore()
 const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const token = localStorage.getItem('kumo')
+const header = { headers: { Authorization: `Bearer ${token}` } }
 
 // for close modal
 const emit = defineEmits(['emit-close'])
@@ -27,7 +28,10 @@ const refresh = () => {
 
 const deleteCampaign = async () => {
   try {
-    const result = await axios.delete(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`)
+    const result = await axios.delete(
+      `${BASE_URL}/api/campaign/${props.campaign?.campaignId}`,
+      header,
+    )
     if (result.data?.status != 1) {
       close()
       open('failed to delete the campaign', 'error')

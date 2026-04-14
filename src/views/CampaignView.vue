@@ -26,6 +26,8 @@ const toast = useToastStore()
 const { open } = toast
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const token = localStorage.getItem('kumo')
+const header = { headers: { Authorization: `Bearer ${token}` } }
 
 // for campaign table format
 const columns = [
@@ -96,7 +98,7 @@ const toggleDropdown = (no) => {
 // get all data from backend
 const renderCampaignList = async () => {
   try {
-    const result = await axios.get(`${BASE_URL}/api/campaign`)
+    const result = await axios.get(`${BASE_URL}/api/campaign`, header)
     if (result.data?.status != 1) {
       return open('Something wrong!', 'error')
     }
@@ -160,7 +162,7 @@ const refresh = (status) => {
 // for other little button
 const changeEnable = async (campaignId) => {
   try {
-    const result = await axios.put(`${BASE_URL}/api/campaign/enable/${campaignId}`)
+    const result = await axios.put(`${BASE_URL}/api/campaign/enable/${campaignId}`, null, header)
     if (result.data?.status != 1) {
       return open('failed to change the enable', 'error')
     }

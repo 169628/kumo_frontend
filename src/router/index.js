@@ -41,24 +41,15 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const token = getCookie('kumo')
+  const token = localStorage.getItem('kumo')
 
-  if (to.meta.requiresAuth && (!token || token.length == 0)) {
+  if (to.meta.requiresAuth && !token) {
     next('/login')
-  } else if (to.path === '/login' && (token || token.length >= 1)) {
+  } else if (to.path === '/login' && token) {
     next('/')
   } else {
     next()
   }
 })
-
-const getCookie = (name) => {
-  return (
-    document.cookie
-      .split('; ')
-      .find((row) => row.startsWith(name + '='))
-      ?.split('=')[1] || ''
-  )
-}
 
 export default router

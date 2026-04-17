@@ -1,4 +1,5 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import { ref, computed, watch } from 'vue'
 import { Form, useForm, Field, ErrorMessage } from 'vee-validate'
 import { schema } from '@/validations/campaignSchema'
@@ -26,6 +27,8 @@ const { handleSubmit, setValues, resetForm } = useForm({
 
 const toast = useToastStore()
 const { open } = toast
+
+const router = useRouter()
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 const token = localStorage.getItem('kumo')
@@ -86,8 +89,7 @@ const campaignHandler = handleSubmit(async (values) => {
       payload.tv = values.tv
     }
     if (file instanceof File) {
-      payload.file = file.name
-      payload.fileSize = file.size
+      payload.uploadData = file
     }
     if (newCampaign.value.isTestMode != oldCampaign.value.isTestMode) {
       payload.isTestMode = newCampaign.value.isTestMode
@@ -101,16 +103,36 @@ const campaignHandler = handleSubmit(async (values) => {
 
     let result
     if (props.mode == 'create') {
-      result = await axios.post(`${BASE_URL}/api/campaign`, payload, header)
-    } else {
-      result = await axios.put(
-        `${BASE_URL}/api/campaign/${props.campaign?.campaignId}`,
-        payload,
-        header,
+      const formData = new FormData()
+      const { uploadData, ...campaignData } = payload
+      formData.append(
+        'campaign',
+        new Blob([JSON.stringify(campaignData)], { type: 'application/json' }),
       )
+      if (uploadData instanceof File) {
+        formData.append('uploadData', uploadData)
+      }
+      result = await axios.post(`${BASE_URL}/api/campaign`, formData, header)
+    } else {
+      const formData = new FormData()
+      const { uploadData, ...campaignData } = payload
+      formData.append(
+        'campaign',
+        new Blob([JSON.stringify(campaignData)], { type: 'application/json' }),
+      )
+      if (uploadData instanceof File) {
+        formData.append('uploadData', uploadData)
+      }
+      result = await axios.put(`${BASE_URL}/api/campaign/${props.campaign?.campaignId}`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
     }
 
-    if (result.data?.status != 1) {
+    if (result.data?.status == 2) {
+      localStorage.removeItem('kumo')
+      await router.push('/')
+      return
+    } else if (result.data?.status != 1) {
       refresh()
       close()
       return open(`${props.mode.toLowerCase()} failed!!`, 'error')
@@ -136,7 +158,12 @@ watch(
           `${BASE_URL}/api/campaign/${props.campaign?.campaignId}`,
           header,
         )
-        if (result.data?.status != 1) {
+
+        if (result.data?.status == 2) {
+          localStorage.removeItem('kumo')
+          await router.push('/')
+          return
+        } else if (result.data?.status != 1) {
           close()
           return open('error, can not find the campaign!!', 'error')
         }

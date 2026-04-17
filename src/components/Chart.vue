@@ -1,4 +1,5 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
@@ -20,6 +21,8 @@ const series = ref([
 ])
 const toast = useToastStore()
 const { open } = toast
+
+const router = useRouter()
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 const token = localStorage.getItem('kumo')
@@ -110,9 +113,14 @@ const chartOptions = ref({
 onMounted(async () => {
   try {
     const result = await axios.get(`${BASE_URL}/api/report/received`, header)
-    if (result.data?.status != 1) {
+    if (result.data?.status == 2) {
+      localStorage.removeItem('kumo')
+      await router.push('/')
+      return
+    } else if (result.data?.status != 1) {
       return open('Something wrong!', 'error')
     }
+
     const { deviceMap, projector, monitor, robotVacuum } = result.data?.data
     devicesMaps.value = deviceMap
     series.value = [

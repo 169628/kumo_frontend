@@ -1,4 +1,5 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
 
@@ -10,6 +11,8 @@ const props = defineProps({
 
 const toast = useToastStore()
 const { open } = toast
+
+const router = useRouter()
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL
 const token = localStorage.getItem('kumo')
@@ -32,7 +35,12 @@ const deleteCampaign = async () => {
       `${BASE_URL}/api/campaign/${props.campaign?.campaignId}`,
       header,
     )
-    if (result.data?.status != 1) {
+
+    if (result.data?.status == 2) {
+      localStorage.removeItem('kumo')
+      await router.push('/')
+      return
+    } else if (result.data?.status != 1) {
       close()
       open('failed to delete the campaign', 'error')
       return

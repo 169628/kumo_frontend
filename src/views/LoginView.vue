@@ -20,7 +20,6 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL
 const login = handleSubmit(async (values) => {
   try {
     const result = await axios.post(`${BASE_URL}/api/login`, values)
-    console.log(result)
     if (result.data?.status != 1) {
       open('Failed to login, please try again', 'error')
       resetForm()
@@ -29,7 +28,10 @@ const login = handleSubmit(async (values) => {
     const token = result.data?.data
     localStorage.setItem('kumo', token)
     router.push('/')
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+    open(error, 'error')
+  }
 })
 </script>
 

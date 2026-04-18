@@ -24,7 +24,7 @@ const goNext = () => {
 </script>
 
 <template>
-  <div class="absolute bottom-25 md:bottom-10 left-0 w-full flex justify-center">
+  <div class="absolute bottom-16 lg:bottom-10 left-0 w-full flex justify-center">
     <nav class="join">
       <button
         type="button"

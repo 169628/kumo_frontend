@@ -5,6 +5,7 @@ import { Form, useForm, Field, ErrorMessage } from 'vee-validate'
 import { schema } from '@/validations/campaignSchema'
 import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
+import { formatFileSize } from '@/utils/format'
 
 const props = defineProps({
   show: Boolean,
@@ -18,7 +19,7 @@ const defaultCampaign = {
   downloadBy: 'wifi',
 }
 const oldCampaign = ref({})
-const newCampaign = ref(defaultCampaign)
+const newCampaign = ref({ ...defaultCampaign })
 const hasExistingFile = ref(false)
 // vee-validate
 const { handleSubmit, setValues, resetForm } = useForm({
@@ -60,12 +61,6 @@ const removeTestList = (index) => {
   }
 }
 
-const formatFileSize = (bytes) => {
-  if (!bytes) return ''
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
-  return (bytes / 1024 / 1024).toFixed(2) + ' MB'
-}
 const removeFile = (setValue) => {
   setValue(null)
   newCampaign.value.fileSize = 0

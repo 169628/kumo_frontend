@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { onMounted, ref, computed, watch } from 'vue'
 import { useToastStore } from '@/stores/toastStore'
 import axios from 'axios'
+import { formatFileSize } from '@/utils/format'
 
 import CampaignModal from '@/components/CampaignModal.vue'
 import DeleteModal from '@/components/DeleteModal.vue'
@@ -56,7 +57,7 @@ const columns = [
   },
   {
     key: 'model',
-    class: '',
+    class: 'hidden md:table-cell',
     title: 'MODEL',
   },
   {
@@ -263,11 +264,14 @@ onMounted(() => {
     <template #sv="{ value }">
       <td class="hidden md:table-cell">{{ value }}</td>
     </template>
+    <template #model="{ value }">
+      <td class="hidden md:table-cell">{{ value }}</td>
+    </template>
     <template #tv="{ value }">
       <td class="hidden lg:table-cell">{{ value }}</td>
     </template>
     <template #fileSize="{ value }">
-      <td class="hidden lg:table-cell">{{ value }}</td>
+      <td class="hidden lg:table-cell">{{ formatFileSize(value) }}</td>
     </template>
     <template #createAt="{ value }">
       <td class="hidden xl:table-cell">{{ value }}</td>
@@ -302,13 +306,16 @@ onMounted(() => {
         >
           <ul v-if="dropdown == row.no">
             <li class="md:hidden">
+              <span class="font-medium tracking-wider">MODEL:</span> {{ row.model }}
+            </li>
+            <li class="md:hidden">
               <span class="font-medium tracking-wider">SV:</span> {{ row.sv }}
             </li>
             <li class="lg:hidden">
               <span class="font-medium tracking-wider">TV:</span> {{ row.tv }}
             </li>
             <li class="lg:hidden">
-              <span class="font-medium tracking-wider">SIZE:</span> {{ row.fileSize }}
+              <span class="font-medium tracking-wider">SIZE:</span> {{ formatFileSize(row.fileSize) }}
             </li>
             <li class="xl:hidden">
               <span class="font-medium tracking-wider">CREATE AT:</span> {{ row.createAt }}
